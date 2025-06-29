@@ -37,6 +37,7 @@ def group_introns(annotation_gff, groups):
 
     # Creating arrays with the selected types of records
     genes = annotation_columns[annotation_columns['type'] == 'gene'].values
+    #print(genes)
     transcripts = annotation_columns[annotation_columns['type'] == 'mRNA'].values
     exons = annotation_columns[annotation_columns['type'] == 'exon'].values
     introns = annotation_columns[annotation_columns['type'] == 'intron'].values
@@ -46,6 +47,8 @@ def group_introns(annotation_gff, groups):
     print("Liczba transkryptów: ", len(transcripts))
     print("Liczba eksonów: ", len(exons))
     print("Liczba intronów: ", len(introns))
+    print("liczba rekordów w pliku wejściowym: ", len(data_array))
+
     # Loading the list of genes grouped by overlapping each other and potentially being the same gene
     overlap_data = open(groups)
 
@@ -59,6 +62,8 @@ def group_introns(annotation_gff, groups):
         # Adding a list from a row to the general list of lists
         overlap_list.append(i_list)
         j += 1
+
+    print(overlap_data)
 
     #variables for statistics
     not_found_genes = set()
@@ -86,11 +91,18 @@ def group_introns(annotation_gff, groups):
         gene_id = gene[9]
         genes_introns_dict[gene_id] = []
         genes_dict[gene_id] = gene
+    # print('geny na początku: ')
+    # for i in genes[0]:
+    #     print(i)
     # Every transcript in loaded annotation data will be added to the list[0] field in the value of it's parent's key
+    # print('transrypty na początku: ')
+    # for i in transcripts[0]:
+    #     print(i)
     for transcript in transcripts:
         parent = transcript[11]
         transcript_id = transcript[9]
         genes_introns_dict[parent].append(transcript)
+        #if parent in genes_introns_dict:
         #in the first set, there wil be introns' ids stored
         genes_introns_dict[parent].append(set())
         #in the second, tuples containing the beginning and the end of an intron
@@ -148,10 +160,12 @@ def group_introns(annotation_gff, groups):
             # but to optimize the time and memory we are comparing the genes only
             # when the first index is lower than the second (upper triangular matrix)
 
-            #print('porównywane indeksy: ', gene_index1, gene_index2)
+            # print('porównywane indeksy: ', gene_index1, gene_index2)
 
             gene1 = group[gene_index1]
             gene2 = group[gene_index2]
+            record1 = 0
+            record2 = 0
 
             #checking if the genes' ids are in the loaded data
             if gene1 in genes_introns_dict:
@@ -159,32 +173,39 @@ def group_introns(annotation_gff, groups):
             else:
                 #if not, adding its ids to the not found genes
                 not_found_genes.add(gene1)
-                break
+                #print('nie znaleziony 1: ', gene1)
+                #break
             if gene2 in genes_introns_dict:
                 record2 = genes_introns_dict[gene2]
             else:
                 not_found_genes.add(gene2)
-                break
+                #print('nie znaleziony 2: ', gene2)
+                #break
 
-            N = count_identical_introns(record1, record2)
-            M, overlapping_introns_set = overlapping_introns(record1, record2)
-            # print(type(transcripts))
-            matrix[gene_index1, gene_index2] = M
+            if type(record1)!= int and type(record2)!= int:
+                N = count_identical_introns(record1, record2)
+                M, overlapping_introns_set = overlapping_introns(record1, record2)
+                # print(type(transcripts))
+                matrix[gene_index1, gene_index2] = M
 
-            #print("overlapping_introns_set: ", overlapping_introns_set)
-            answer = set()
+                #print("overlapping_introns_set: ", overlapping_introns_set)
+                answer = set()
 
-            #for further examination will be taken only the overlapping genes
-            answer = find_alt_splicing(overlapping_introns_set)
-            ans = (gene1, gene2, answer)
-            #tutaj można też od razu zapisywać do pliku
-            alternative_splicing_sites.append(ans)
+                #for further examination will be taken only the overlapping genes
+                answer = find_alt_splicing(overlapping_introns_set)
+                #print("answer: ", answer)
+                ans = (gene1, gene2, answer)
+                #tutaj można też od razu zapisywać do pliku
+                alternative_splicing_sites.append(ans)
+            else:
+                continue
 
         alternative_splicing_sites.append(['group_number{}'.format(group_number), group_number, "group" ])
         group_number += 1
         #     print("answer: ", answer)
         #
-        # print(matrix)
+        # if np.sum(matrix)>0:
+        #     print(matrix)
         # print(alternative_splicing_sites)
 
         # if we find a whole row full of zeros, it means, that the gene group[index_of_the_row] has none introns
@@ -215,7 +236,8 @@ def group_introns(annotation_gff, groups):
                 if group_parent == 0:
                     # we make a current record from a group a new parent
                     group_parent = group[i]
-                    break
+                    #break
+                    pass
                 #if the group_parent already exists and has overlapping introns with
                 #changing parents of transcripts
 
@@ -224,7 +246,7 @@ def group_introns(annotation_gff, groups):
                 old_parent = transcripts_dict[transcript_id][1][11]
 
                 transcripts_dict[transcript_id][1][11] = group_parent
-
+##########dodać feature old parent
                 #if we changed the parent above
                 if old_parent != group_parent:
                     # changing attributes of the gene
@@ -233,11 +255,12 @@ def group_introns(annotation_gff, groups):
                     attributes_list = old_attributes.split(';')
                     #print("attributes_list: ", attributes_list)
                     attributes_list[2] = 'Parent={}'.format(group_parent)
+                    attributes_list.append('Old_Parent={}'.format(old_parent))
                     #print("attributes_list: ", attributes_list)
                     transcripts_dict[transcript_id][1][8] = ";".join(attributes_list)
                     #print(transcripts_dict)[1]
 
-
+############dodać komu przekazany
                     #changing type of duplicated gene
                     genes_dict[old_parent][2] = 'deserted'
 
@@ -270,22 +293,33 @@ def group_introns(annotation_gff, groups):
     #print(genes_dict)
 
     #adding every record (and every type) to the array with results
-    new_data_array = np.empty_like(data_array)
+    # new_array = data_array[0:9]
+    # # new_data_array = np.empty_like(new_array)
+    # new_data_array = np.empty_like((len(data_array),9))
+    # new_data_array = np.empty((len(data_array), 9), dtype=object)
+    # Total number of records: count from all sources
+    num_records = len(genes_dict) + len(transcripts_dict) + len(exons) + len(introns) + len(CDS)
+
+    # Create empty array with shape (num_records, 9)
+    new_data_array = np.empty((num_records, 9), dtype=object)
+
+    print(new_data_array[0])
     i = 0
     for gene in genes_dict:
-        new_data_array[i] = genes_dict[gene]
+        new_data_array[i] = genes_dict[gene][0:9]
+        #print(genes_dict[gene][0:9])
         i += 1
     for transcript in transcripts_dict:
-        new_data_array[i] = transcripts_dict[transcript][1]
+        new_data_array[i] = transcripts_dict[transcript][1][0:9]
         i += 1
     for exon in exons:
-        new_data_array[i] = exon
+        new_data_array[i] = exon[0:9]
         i += 1
     for intron in introns:
-        new_data_array[i] = intron
+        new_data_array[i] = intron[0:9]
         i += 1
     for cd in CDS:
-        new_data_array[i] = cd
+        new_data_array[i] = cd[0:9]
         i += 1
 
     print("liczba rekordów w nowym pliku: ", len(new_data_array), " powinna być taka sama jak w pliku wejściowym")
@@ -338,7 +372,7 @@ def find_alt_splicing(overlapping_introns_set):
 
     different_ends = set()
     pairs_list = list(overlapping_introns_set)
-
+    #print("lista: ", pairs_list)
     #comparing introns' ends
     #if the number of identical genes is equal of the general number of introns from one or both of the genes,
     #there's no reason to compare this pair. There is no alternative splicing it such a case
@@ -370,7 +404,8 @@ def find_alt_splicing(overlapping_introns_set):
 
         #it means both ends are the same, so there is no alternative splicing
         if identical == 2:
-            break
+            #break
+            continue
 
         #if one end is identical, we add the tuple of the second ends indices to the "different_ends" set
         if identical == 1:
@@ -423,6 +458,7 @@ def overlapping_introns(gene1_dict_record, gene2_dict_record):
     introns_set2 = gene2_dict_record[2]
 
     #print(gene1_dict_record)
+    #print(gene2_dict_record)
 
     # range1 = range(len(gene1_dict_record[1]))
     # range2 = range(len(gene2_dict_record[1]))
@@ -452,8 +488,7 @@ def change_to_dataframe(data_list):
     :return: given array data in pandas.Dataframe format
     '''
     new_dataframe = pd.DataFrame(data=data_list, index=None, columns=['seq_id', 'source', 'type', 'start', 'end', 'score', 'strand', 'phase',
-           'attributes', 'ID', 'Name', 'Parent', 'Target', 'coverage', 'identity',
-           'indels', 'matches', 'mismatches', 'unknowns'], dtype=object, copy=None)
+           'attributes'], dtype=object, copy=None)
 
     return new_dataframe
 
@@ -467,7 +502,7 @@ def save_gff_to_file(new_dataframe):
         sep='\t',
         header=False,
         index=False,
-        #quoting=3  # Avoid quoting strings unnecessarily
+        quoting=3  # Avoid quoting strings unnecessarily
     )
 
 group_introns('C:\\Users\\ania\\Documents\\Studia\\Licencjat\\multiexon.gff', 'C:\\Users\\ania\\Documents\\Studia\\Licencjat\\groups.lst')
