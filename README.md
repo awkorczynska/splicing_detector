@@ -24,6 +24,7 @@ splicing_detector requires instalation of a few python packages. These are:
 * time
 * argparse
 * intertools
+
 Imports of these libraries are written in the script, but earlier instalation on your device is required for them to work properly.
 
 
