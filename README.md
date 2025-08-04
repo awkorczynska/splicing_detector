@@ -18,12 +18,12 @@ This program is a part of Anna Korczyńska's bachelor degree project.
 ## Technologies and requirements
 This project is created in Python 3.10.8 and uses python packages listed below:
 splicing_detector requires instalation of a few python packages. These are:
-	*pandas
-	*gffpandas
-	*numpy
-	*time
-	*argparse
-	*intertools
+	* pandas
+	* gffpandas
+	* numpy
+	* time
+	* argparse
+	* intertools
 Imports of these libraries are written in the script, but earlier instalation on your device is required for them to work properly.
 
 
