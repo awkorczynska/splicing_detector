@@ -51,29 +51,34 @@ There are a few examples of how to use the program and provide arguments.
 
 Example 1 - want to find alternative splicing on an annotation with short genes or want to detect as one gene repetitive short transcripts.
 Run the program on default settings providing only annotation and groups files
+
 python splicing_detector.py -a path/to/gff/file -g path/to/groups/file
 (minimal_number is 1 as default and program_type is 'identical')
+
 the same result as
 python splicing_detector.py -a path/to/gff/file -g path/to/groups/file -m 1 -t identical
 
 Example 2 - want to detect (as one gene) only these with many common introns and find alternative splicing. Usefull if you want to filter only long genes from tha annotation file.
 Run the program with changed minimal number
+
 python splicing_detector.py -a path/to/gff/file -g path/to/groups/file -m 4
 (program_type is 'identical' as default)
+
 the same result as
 python splicing_detector.py -a path/to/gff/file -g path/to/groups/file -m 4 identical
 
 Example 3 - want to find alernative splicing in the most vide range as possible. The introns don't have to be identical, only overlapping and only one has to be in common os as in short genes with one intron alternative splicing can also be detected.
 Run the program in overlap type without changing default minimal number
+
 python splicing_detector.py -a path/to/gff/file -g path/to/groups/file -t overlap
 (minimal_number is 1 as default)
+
 the same result as
 python splicing_detector.py -a path/to/gff/file -g path/to/groups/file -m 1 -t overlap
 
 Example 4 - want to find alternative splicing also if alternative splicing occurs in every intron, but want to avoid potentially false-positive short genes.
-run the program with
+run the program with minimal_number 5 for example (not to big, but big enough to filter short genes) and 'overlap' option
 python splicing_detector.py -a path/to/gff/file -g path/to/groups/file -m 5 -t overlap
-(minimal_number 5 for example, not to big, but big enough to filter short genes)
 here there is no option to ommit any arguments and receive the same results
 
 
