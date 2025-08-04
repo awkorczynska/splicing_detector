@@ -49,7 +49,7 @@ There are obligatory and optional arguments. You can run the program with option
 ## How to use - examples
 There are a few examples of how to use the program and provide arguments.
 
-Example 1 - want to find alternative splicing on an annotation with short genes or want to detect as one gene repetitive short transcripts.
+*Example 1* - want to find alternative splicing on an annotation with short genes or want to detect as one gene repetitive short transcripts.
 Run the program on default settings providing only annotation and groups files
 
 python splicing_detector.py -a path/to/gff/file -g path/to/groups/file
